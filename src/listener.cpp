@@ -2,6 +2,7 @@
 
 #include <fmt/format.h>
 
+#include <boost/asio/strand.hpp>
 #include <boost/beast/core/bind_handler.hpp>
 
 #include "session.h"
@@ -28,13 +29,16 @@ Listener::Listener(net::io_context& io_context, tcp::endpoint endpoint)
   m_acceptor.bind(endpoint, error);
 
   if (error) {
-    throw std::runtime_error(fmt::format("Listener::Listener: couldn't bind acceptor: {}", error.message()));
+    throw std::runtime_error(fmt::format(
+        "Listener::Listener: couldn't bind acceptor: {}", error.message()));
   }
 
   m_acceptor.listen(net::socket_base::max_listen_connections, error);
 
   if (error) {
-    throw std::runtime_error(fmt::format("Listener::Listener: couldn't listen on acceptor: {}", error.message()));
+    throw std::runtime_error(
+        fmt::format("Listener::Listener: couldn't listen on acceptor: {}",
+                    error.message()));
   }
 }
 
@@ -48,7 +52,8 @@ void Listener::DoAccept() {
 
 void Listener::OnAccept(beast::error_code error, tcp::socket socket) {
   if (error) {
-    throw std::runtime_error(fmt::format("Listener::OnAccept: {}", error.message()));
+    throw std::runtime_error(
+        fmt::format("Listener::OnAccept: {}", error.message()));
   }
 
   std::make_shared<Session>(std::move(socket))->Run();

@@ -6,7 +6,6 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/bind_handler.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/stream_base.hpp>
 #include <memory>
 
 namespace Pathfinding {

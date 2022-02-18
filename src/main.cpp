@@ -1,16 +1,11 @@
-#include <boost/asio/strand.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
-#include <boost/beast/core/bind_handler.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/stream_base.hpp>
 #include <iostream>
 
 #include "listener.h"
 
 using boost::asio::ip::tcp;
 namespace beast = boost::beast;
-namespace http = beast::http;
-namespace websocket = beast::websocket;
 namespace net = beast::net;
 
 int main(int argc, char** argv) {
