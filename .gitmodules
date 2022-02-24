@@ -1,0 +1,3 @@
+[submodule "pathfinding-showcase-proto"]
+	path = pathfinding-showcase-proto
+	url = git@github.com:vukanovics/pathfinding-showcase-proto.git
