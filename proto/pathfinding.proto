@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "pathfinding_node.proto";
+import "pathfinding_connection.proto";
+import "pathfinding_path.proto";
+
+message ToServerCommand {
+  oneof command {
+    AddNode add_node = 1;
+    RemoveNode remove_node = 2;
+    AddConnection add_connection = 3;
+    RemoveConnection remove_connection = 4;
+    FindPath find_path = 5;
+  }
+}
+
+message ToClientCommand {
+  oneof command {
+    NodeAdded node_added = 1;
+    NodeRemoved node_removed = 2;
+    ConnectionAdded connection_added = 3;
+    ConnectionRemoved connection_removed = 4;
+    PathResult path_result = 5;
+  }
+}

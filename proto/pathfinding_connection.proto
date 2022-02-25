@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+message AddConnection {
+  uint32 id1 = 1;
+  uint32 id2 = 2;
+}
+
+message ConnectionAdded {
+  uint32 id1 = 1;
+  uint32 id2 = 2;
+}
+
+message RemoveConnection {
+  uint32 id1 = 1;
+  uint32 id2 = 2;
+}
+
+message ConnectionRemoved {
+  uint32 id1 = 1;
+  uint32 id2 = 2;
+}

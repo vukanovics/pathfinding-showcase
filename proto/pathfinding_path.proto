@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message FindPath {
+  uint32 start = 1;
+  uint32 goal = 2;
+}
+
+message PathResult {
+  bool found = 1;
+  repeated uint32 nodes = 2;
+}
