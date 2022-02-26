@@ -2,6 +2,8 @@
 
 #include <boost/beast/core/bind_handler.hpp>
 
+#include "pathfinding.pb.h"
+
 namespace Pathfinding {
 void Session::Run() {
   net::dispatch(m_web_socket.get_executor(),
@@ -38,16 +40,37 @@ void Session::DoRead() {
 void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
   boost::ignore_unused(bytes_transferred);
 
-  if (error) {
+  if (error && error != boost::asio::error::eof) {
     throw std::runtime_error(
         fmt::format("Session::OnRead: {}", error.message()));
   }
 
-  m_web_socket.text(m_web_socket.got_text());
+  auto toserver_cmd = ToServerCommand{};
+  toserver_cmd.ParseFromArray(m_buffer.cdata().data(),
+                              m_buffer.cdata().size());  // NOLINT
+  switch (toserver_cmd.command_case()) {
+    case ToServerCommand::CommandCase::COMMAND_NOT_SET:
+      fmt::print("Command not set. WTF? \n");
+      break;
+    case ToServerCommand::CommandCase::kAddNode:
+      fmt::print("Add node received! x={}, y={}\n", toserver_cmd.add_node().x(),
+                 toserver_cmd.add_node().y());
+      break;
+    case ToServerCommand::CommandCase::kRemoveNode:
+      fmt::print("Remove node received!\n");
+      break;
+    case ToServerCommand::CommandCase::kAddConnection:
+      fmt::print("Add connection received!\n");
+      break;
+    case ToServerCommand::CommandCase::kRemoveConnection:
+      fmt::print("Remove connection received!\n");
+      break;
+    case ToServerCommand::CommandCase::kFindPath:
+      fmt::print("Find path received!\n");
+      break;
+  }
 
-  m_web_socket.async_write(
-      m_buffer.data(),
-      beast::bind_front_handler(&Session::OnWrite, shared_from_this()));
+  DoRead();
 }
 
 void Session::OnWrite(beast::error_code error, std::size_t bytes_transferred) {
