@@ -19,3 +19,4 @@ conan_basic_setup(NO_OUTPUT_DIRS)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
 add_subdirectory(src)
+add_subdirectory(ui)

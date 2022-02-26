@@ -2,3 +2,6 @@ build/
 bin/
 .cache/
 compile_commands.json
+ui/*_pb.js
+ui/node_modules
+ui/static/bundle.js

@@ -1,0 +1,17 @@
+{
+  "name": "pathfinding-showcase",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Stefan Vukanović",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "express": "^4.17.3",
+    "google-protobuf": "^3.19.4",
+    "protobufjs": "^6.11.2"
+  }
+}
