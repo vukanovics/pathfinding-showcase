@@ -1,5 +1,6 @@
 #include "session.h"
 
+#include <boost/asio/error.hpp>
 #include <boost/beast/core/bind_handler.hpp>
 
 #include "pathfinding.pb.h"
@@ -42,7 +43,13 @@ void Session::DoRead() {
 void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
   boost::ignore_unused(bytes_transferred);
 
-  if (error && error != boost::asio::error::eof) {
+  if (error == boost::asio::error::eof ||
+      error == boost::asio::error::shut_down ||
+      error == boost::beast::websocket::error::closed) {
+    return;
+  }
+
+  if (error) {
     throw std::runtime_error(
         fmt::format("Session::OnRead: {}", error.message()));
   }
