@@ -2,6 +2,7 @@ find_package(Protobuf REQUIRED)
 
 include_directories(${Protobuf_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/libs)
 
 protobuf_generate_cpp(
   PROTO_SRCS
@@ -24,6 +25,7 @@ add_executable(
 
 target_link_libraries(
   pathfinding-backend
+  libpathfinding
   ${CONAN_LIBS}
   ${Protobuf_LIBRARIES}
 )

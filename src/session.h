@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fmt/format.h>
+#include <libpathfinding/src/pathfinder.h>
 
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -35,6 +36,8 @@ class Session : public std::enable_shared_from_this<Session> {
 
  private:
   void ProcessAddNode(const float x, const float y) noexcept;
+
+  Pathfinding::Pathfinder m_pathfinder;
 
   std::vector<std::string> m_out_buffers;
   beast::flat_buffer m_buffer;

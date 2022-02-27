@@ -1,0 +1,3 @@
+[submodule "libs/libpathfinding"]
+	path = libs/libpathfinding
+	url = git@github.com:vukanovics/libpathfinding.git

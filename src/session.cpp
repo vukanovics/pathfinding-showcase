@@ -1,5 +1,7 @@
 #include "session.h"
 
+#include <libpathfinding/src/pathfinder.h>
+
 #include <boost/asio/error.hpp>
 #include <boost/beast/core/bind_handler.hpp>
 
