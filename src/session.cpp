@@ -70,6 +70,8 @@ void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
       break;
   }
 
+  m_buffer.consume(m_buffer.size());
+
   DoRead();
 }
 
@@ -80,10 +82,6 @@ void Session::OnWrite(beast::error_code error, std::size_t bytes_transferred) {
     throw std::runtime_error(
         fmt::format("Session::OnWrite: {}", error.message()));
   }
-
-  m_buffer.consume(m_buffer.size());
-
-  DoRead();
 }
 
 };  // namespace Pathfinding
