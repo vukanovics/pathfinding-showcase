@@ -19,6 +19,8 @@ void Session::OnRun() {
         res.set(http::field::server, std::string("pathfinding-websockets"));
       }));
 
+  m_web_socket.binary(true);
+
   m_web_socket.async_accept(
       beast::bind_front_handler(&Session::OnAccept, shared_from_this()));
 }
@@ -53,8 +55,7 @@ void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
       fmt::print("Command not set. WTF? \n");
       break;
     case ToServerCommand::CommandCase::kAddNode:
-      fmt::print("Add node received! x={}, y={}\n", toserver_cmd.add_node().x(),
-                 toserver_cmd.add_node().y());
+      ProcessAddNode(toserver_cmd.add_node().x(), toserver_cmd.add_node().y());
       break;
     case ToServerCommand::CommandCase::kRemoveNode:
       fmt::print("Remove node received!\n");
@@ -72,7 +73,20 @@ void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
 
   m_buffer.consume(m_buffer.size());
 
-  DoRead();
+  DoWrite();
+}
+
+void Session::DoWrite() {
+  if (m_out_buffers.empty()) {
+    DoRead();
+    return;
+  }
+  const auto& last = m_out_buffers.back();
+  m_out_buffers.pop_back();
+
+  m_web_socket.async_write(
+      boost::asio::buffer(last),
+      beast::bind_front_handler(&Session::OnWrite, shared_from_this()));
 }
 
 void Session::OnWrite(beast::error_code error, std::size_t bytes_transferred) {
@@ -82,6 +96,18 @@ void Session::OnWrite(beast::error_code error, std::size_t bytes_transferred) {
     throw std::runtime_error(
         fmt::format("Session::OnWrite: {}", error.message()));
   }
+
+  DoRead();
+}
+
+void Session::ProcessAddNode(const float x, const float y) noexcept {
+  auto toclient_cmd = ToClientCommand{};
+  auto node_added_cmd = new NodeAdded{};  // NOLINT: protobuf owns, not us
+  node_added_cmd->set_x(x);
+  node_added_cmd->set_y(y);
+  toclient_cmd.set_allocated_node_added(node_added_cmd);
+
+  m_out_buffers.push_back(toclient_cmd.SerializeAsString());
 }
 
 };  // namespace Pathfinding

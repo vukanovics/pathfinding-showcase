@@ -22,12 +22,21 @@ let currentTool = ToolNone;
 
 let ws = new WebSocket("ws://127.0.0.1:8888");
 
+ws.binaryType = "arraybuffer";
+
 ws.onopen = function() {
     console.log("connected!");
 }
 
 ws.onmessage = function(msg) {
-    console.log(msg);
+    var command = pathfinding_pb.ToClientCommand.deserializeBinary(msg.data);
+    switch (command.getCommandCase()) {
+        case pathfinding_pb.ToClientCommand.CommandCase.COMMAND_NOT_SET:
+            break;
+        case pathfinding_pb.ToClientCommand.CommandCase.NODE_ADDED:
+            console.log("Node added! x=", command.getNodeAdded().getX(), " y=", command.getNodeAdded().getX());
+            break;
+    }
 }
 
 function sendAddNode(x, y) {
@@ -45,7 +54,7 @@ function sendAddNode(x, y) {
     command.setAddNode(add_node);
 
     let data = command.serializeBinary();
-    console.log("sending ", data);
+
     ws.send(data);
 }
 

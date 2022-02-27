@@ -29,9 +29,14 @@ class Session : public std::enable_shared_from_this<Session> {
 
   void OnRead(beast::error_code error, std::size_t bytes_transferred);
 
+  void DoWrite();
+
   void OnWrite(beast::error_code error, std::size_t bytes_transferred);
 
  private:
+  void ProcessAddNode(const float x, const float y) noexcept;
+
+  std::vector<std::string> m_out_buffers;
   beast::flat_buffer m_buffer;
   websocket::stream<beast::tcp_stream> m_web_socket;
 };
