@@ -110,10 +110,17 @@ void Session::OnWrite(beast::error_code error, std::size_t bytes_transferred) {
 }
 
 void Session::ProcessAddNode(const float x, const float y) noexcept {
+  auto new_node = std::make_unique<PathfinderNode>(x, y);
+  auto new_node_ptr = m_pathfinder.AddNode(std::move(new_node));
+
+  const auto new_node_index = m_pathfinder_nodes.size();
+  m_pathfinder_nodes.push_back(new_node_ptr);
+
   auto toclient_cmd = ToClientCommand{};
   auto node_added_cmd = new NodeAdded{};  // NOLINT: protobuf owns, not us
   node_added_cmd->set_x(x);
   node_added_cmd->set_y(y);
+  node_added_cmd->set_id(new_node_index);
   toclient_cmd.set_allocated_node_added(node_added_cmd);
 
   m_out_buffers.push_back(toclient_cmd.SerializeAsString());

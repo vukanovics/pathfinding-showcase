@@ -34,7 +34,7 @@ ws.onmessage = function(msg) {
         case pathfinding_pb.ToClientCommand.CommandCase.COMMAND_NOT_SET:
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.NODE_ADDED:
-            console.log("Node added! x=", command.getNodeAdded().getX(), " y=", command.getNodeAdded().getX());
+            console.log("Node added! x=", command.getNodeAdded().getX(), " y=", command.getNodeAdded().getX(), " id=", command.getNodeAdded().getId());
             break;
     }
 }
