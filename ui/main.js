@@ -9,6 +9,16 @@ const GRID_LINES = 10;
 const GRID_SPACING_X = CANVAS_WIDTH / GRID_LINES;
 const GRID_SPACING_Y = CANVAS_HEIGHT / GRID_LINES;
 
+const GRID_LINE_WIDTH_PX = 1;
+
+const NODE_BORDER_WIDTH_PX = 5;
+
+const NODE_SIZE_PX = 32;
+const NODE_FILL_COLOR = '#8b50fa';
+
+const NODE_NUMBER_FONT = "24px Arial";
+const NODE_NUMBER_COLOR = "#ddd"
+
 // enums in javascript?
 const ToolNone = 0;
 const ToolAddNode = 1;
@@ -19,6 +29,16 @@ const ToolSetStart = 5;
 const ToolSetGoal = 6;
 
 let currentTool = ToolNone;
+
+class Node {
+    constructor(id, x, y) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+    }
+}
+
+let nodes = []
 
 let ws = new WebSocket("ws://127.0.0.1:8888");
 
@@ -34,7 +54,14 @@ ws.onmessage = function(msg) {
         case pathfinding_pb.ToClientCommand.CommandCase.COMMAND_NOT_SET:
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.NODE_ADDED:
-            console.log("Node added! x=", command.getNodeAdded().getX(), " y=", command.getNodeAdded().getX(), " id=", command.getNodeAdded().getId());
+            nodes.push(
+                new Node(
+                    command.getNodeAdded().getId(),
+                    command.getNodeAdded().getX(),
+                    command.getNodeAdded().getY()
+                )
+            );
+            updateCanvas();
             break;
     }
 }
@@ -58,9 +85,18 @@ function sendAddNode(x, y) {
     ws.send(data);
 }
 
+function clearCanvas() {
+    let canvas = document.getElementById("mainCanvas");
+    let canvasContext = canvas.getContext("2d");
+
+    canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 function drawGrid() {
     let canvas = document.getElementById("mainCanvas");
     let canvasContext = canvas.getContext("2d");
+
+    canvasContext.lineWidth = GRID_LINE_WIDTH_PX;
 
     // we add 1 for the border line
     for (let x = 0; x < GRID_LINES + 1; x++) {
@@ -73,6 +109,36 @@ function drawGrid() {
         canvasContext.lineTo(CANVAS_WIDTH, y * GRID_SPACING_Y);
         canvasContext.stroke();
     }
+}
+
+function drawNodes() {
+    let canvas = document.getElementById("mainCanvas");
+    let canvasContext = canvas.getContext("2d");
+
+    canvasContext.lineWidth = NODE_BORDER_WIDTH_PX;
+
+    nodes.forEach((node, _) => {
+        canvasContext.beginPath();
+
+        canvasContext.arc(node.x, node.y, NODE_SIZE_PX, 0, 2 * Math.PI);
+        canvasContext.fillStyle = NODE_FILL_COLOR;
+        canvasContext.fill();
+
+        canvasContext.stroke();
+
+        canvasContext.font = NODE_NUMBER_FONT;
+        canvasContext.textAlign = "center";
+        canvasContext.textBaseline = "middle";
+        canvasContext.fillStyle = NODE_NUMBER_COLOR;
+
+        canvasContext.fillText(node.id.toString(), node.x, node.y);
+    });
+}
+
+function updateCanvas() {
+    clearCanvas();
+    drawGrid();
+    drawNodes();
 }
 
 document.getElementById("mainCanvas").onclick = function(event) {
@@ -93,4 +159,4 @@ document.getElementById("addNodeButton").onclick = function() {
     currentTool = ToolAddNode;
 }
 
-drawGrid();
+updateCanvas();
