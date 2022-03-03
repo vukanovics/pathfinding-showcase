@@ -1,6 +1,8 @@
 let pathfinding_pb = require('./pathfinding_pb.js');
 let pathfinding_node_pb = require('./pathfinding_node_pb.js');
 
+const UPDATE_FPS = 30;
+
 const CANVAS_WIDTH = 512;
 const CANVAS_HEIGHT = 512;
 
@@ -15,6 +17,7 @@ const NODE_BORDER_WIDTH_PX = 5;
 
 const NODE_SIZE_PX = 32;
 const NODE_FILL_COLOR = '#8b50fa';
+const NODE_HOVERED_FILL_COLOR = '#b050fa';
 
 const NODE_NUMBER_FONT = "24px Arial";
 const NODE_NUMBER_COLOR = "#ddd"
@@ -38,7 +41,9 @@ class Node {
     }
 }
 
-let nodes = []
+let nodes = [];
+
+let hovered_node_id = -1;
 
 let ws = new WebSocket("ws://127.0.0.1:8888");
 
@@ -61,7 +66,6 @@ ws.onmessage = function(msg) {
                     command.getNodeAdded().getY()
                 )
             );
-            updateCanvas();
             break;
     }
 }
@@ -122,6 +126,11 @@ function drawNodes() {
 
         canvasContext.arc(node.x, node.y, NODE_SIZE_PX, 0, 2 * Math.PI);
         canvasContext.fillStyle = NODE_FILL_COLOR;
+
+        if (node.id == hovered_node_id) {
+            canvasContext.fillStyle = NODE_HOVERED_FILL_COLOR;
+        }
+
         canvasContext.fill();
 
         canvasContext.stroke();
@@ -139,10 +148,29 @@ function updateCanvas() {
     clearCanvas();
     drawGrid();
     drawNodes();
+
+    setTimeout(() => {
+        updateCanvas();
+    }, 1000 / UPDATE_FPS);
+}
+
+function processMouseMove(x, y) {
+    hovered_node_id = -1;
+
+    nodes.forEach((node, _) => {
+        var delta_x = node.x - x;
+        var delta_y = node.y - y;
+        var distance_to_cursor = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
+
+        if (distance_to_cursor < NODE_SIZE_PX) {
+            hovered_node_id = node.id;
+        }
+    });
 }
 
 document.getElementById("mainCanvas").onclick = function(event) {
-    var canvas = document.getElementById("mainCanvas");
+    const canvas = document.getElementById("mainCanvas");
+
     const x = event.clientX - canvas.getBoundingClientRect().left;
     const y = event.clientY - canvas.getBoundingClientRect().top;
 
@@ -153,6 +181,15 @@ document.getElementById("mainCanvas").onclick = function(event) {
             sendAddNode(x, y);
             break;
     }
+}
+
+document.getElementById("mainCanvas").onmousemove = function(event) {
+    const canvas = document.getElementById("mainCanvas");
+
+    const x = event.clientX - canvas.getBoundingClientRect().left;
+    const y = event.clientY - canvas.getBoundingClientRect().top;
+
+    processMouseMove(x, y);
 }
 
 document.getElementById("addNodeButton").onclick = function() {
