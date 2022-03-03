@@ -67,7 +67,7 @@ void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
       ProcessAddNode(toserver_cmd.add_node().x(), toserver_cmd.add_node().y());
       break;
     case ToServerCommand::CommandCase::kRemoveNode:
-      fmt::print("Remove node received!\n");
+      ProcessRemoveNode(toserver_cmd.remove_node().id());
       break;
     case ToServerCommand::CommandCase::kAddConnection:
       fmt::print("Add connection received!\n");
@@ -114,7 +114,7 @@ void Session::ProcessAddNode(const float x, const float y) noexcept {
   auto new_node_ptr = m_pathfinder.AddNode(std::move(new_node));
 
   const auto new_node_id = [&]() {
-    auto first_unused = 0;
+    auto first_unused = uint32_t{};
     std::for_each(std::cbegin(m_pathfinder_nodes),
                   std::cend(m_pathfinder_nodes),
                   [&first_unused](const auto& id_node) {
@@ -140,4 +140,22 @@ void Session::ProcessAddNode(const float x, const float y) noexcept {
   m_out_buffers.push_back(toclient_cmd.SerializeAsString());
 }
 
+void Session::ProcessRemoveNode(const uint32_t id) noexcept {
+  const auto node_iter = m_pathfinder_nodes.find(id);
+  if (node_iter == std::end(m_pathfinder_nodes)) {
+    fmt::print("Session::ProcessRemoveNode: received an invalid id\n");
+    return;
+  }
+
+  const auto [node_id, node] = *node_iter;
+  m_pathfinder.RemoveNode(node);
+  m_pathfinder_nodes.erase(node_iter);
+
+  auto toclient_cmd = ToClientCommand{};
+  auto node_removed_cmd = new NodeRemoved{}; // NOLINT: protobuf owns, not us
+  node_removed_cmd->set_id(node_id);
+  toclient_cmd.set_allocated_node_removed(node_removed_cmd);
+
+  m_out_buffers.push_back(toclient_cmd.SerializeAsString());
+}
 };  // namespace Pathfinding

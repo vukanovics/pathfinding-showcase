@@ -38,6 +38,7 @@ class Session : public std::enable_shared_from_this<Session> {
 
  private:
   void ProcessAddNode(const float x, const float y) noexcept;
+  void ProcessRemoveNode(const uint32_t id) noexcept;
 
   class PathfinderNode : public Pathfinding::Pathfinder::Node {
    public:
@@ -68,7 +69,7 @@ class Session : public std::enable_shared_from_this<Session> {
   };
 
   Pathfinding::Pathfinder m_pathfinder;
-  std::map<int, Pathfinder::Node*> m_pathfinder_nodes;
+  std::map<uint32_t, Pathfinder::Node*> m_pathfinder_nodes;
 
   std::vector<std::string> m_out_buffers;
   beast::flat_buffer m_buffer;

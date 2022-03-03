@@ -67,6 +67,11 @@ ws.onmessage = function(msg) {
                 )
             );
             break;
+        case pathfinding_pb.ToClientCommand.CommandCase.NODE_REMOVED:
+            nodes = nodes.filter((node) => {
+                return node.id != command.getNodeRemoved().getId();
+            });
+            break;
     }
 }
 
@@ -77,12 +82,34 @@ function sendAddNode(x, y) {
     }
 
     let command = new pathfinding_pb.ToServerCommand();
-    
+
     let add_node = new pathfinding_node_pb.AddNode();
     add_node.setX(x);
     add_node.setY(y);
 
     command.setAddNode(add_node);
+
+    let data = command.serializeBinary();
+
+    ws.send(data);
+}
+
+function sendRemoveNode(id) {
+    if (id == -1) {
+        return;
+    }
+
+    if (ws.readyState != ws.OPEN) {
+        console.log("tried to send a message through socket while it wasn't open");
+        return;
+    }
+
+    let command = new pathfinding_pb.ToServerCommand();
+
+    let remove_node = new pathfinding_node_pb.RemoveNode();
+    remove_node.setId(id);
+
+    command.setRemoveNode(remove_node);
 
     let data = command.serializeBinary();
 
@@ -180,6 +207,9 @@ document.getElementById("mainCanvas").onclick = function(event) {
         case ToolAddNode:
             sendAddNode(x, y);
             break;
+        case ToolRemoveNode:
+            sendRemoveNode(hovered_node_id);
+            break;
     }
 }
 
@@ -194,6 +224,10 @@ document.getElementById("mainCanvas").onmousemove = function(event) {
 
 document.getElementById("addNodeButton").onclick = function() {
     currentTool = ToolAddNode;
+}
+
+document.getElementById("removeNodeButton").onclick = function() {
+    currentTool = ToolRemoveNode;
 }
 
 updateCanvas();
