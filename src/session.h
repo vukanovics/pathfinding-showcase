@@ -7,6 +7,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/bind_handler.hpp>
 #include <boost/beast/websocket.hpp>
+#include <map>
 #include <memory>
 #include <stdexcept>
 
@@ -67,7 +68,7 @@ class Session : public std::enable_shared_from_this<Session> {
   };
 
   Pathfinding::Pathfinder m_pathfinder;
-  std::vector<Pathfinder::Node*> m_pathfinder_nodes;
+  std::map<int, Pathfinder::Node*> m_pathfinder_nodes;
 
   std::vector<std::string> m_out_buffers;
   beast::flat_buffer m_buffer;

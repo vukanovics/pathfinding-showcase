@@ -113,14 +113,28 @@ void Session::ProcessAddNode(const float x, const float y) noexcept {
   auto new_node = std::make_unique<PathfinderNode>(x, y);
   auto new_node_ptr = m_pathfinder.AddNode(std::move(new_node));
 
-  const auto new_node_index = m_pathfinder_nodes.size();
-  m_pathfinder_nodes.push_back(new_node_ptr);
+  const auto new_node_id = [&]() {
+    auto first_unused = 0;
+    std::for_each(std::cbegin(m_pathfinder_nodes),
+                  std::cend(m_pathfinder_nodes),
+                  [&first_unused](const auto& id_node) {
+                    const auto& [id, node] = id_node;
+                    if (id == first_unused) {
+                      first_unused++;
+                    } else {
+                      return;
+                    }
+                  });
+    return first_unused;
+  }();
+
+  m_pathfinder_nodes.insert(std::make_pair(new_node_id, new_node_ptr));
 
   auto toclient_cmd = ToClientCommand{};
   auto node_added_cmd = new NodeAdded{};  // NOLINT: protobuf owns, not us
   node_added_cmd->set_x(x);
   node_added_cmd->set_y(y);
-  node_added_cmd->set_id(new_node_index);
+  node_added_cmd->set_id(new_node_id);
   toclient_cmd.set_allocated_node_added(node_added_cmd);
 
   m_out_buffers.push_back(toclient_cmd.SerializeAsString());
