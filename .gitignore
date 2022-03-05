@@ -1,6 +1,7 @@
 build/
 bin/
 .cache/
+.vscode/
 compile_commands.json
 ui/*_pb.js
 ui/node_modules
