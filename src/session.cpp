@@ -152,7 +152,7 @@ void Session::ProcessRemoveNode(const uint32_t id) noexcept {
   m_pathfinder_nodes.erase(node_iter);
 
   auto toclient_cmd = ToClientCommand{};
-  auto node_removed_cmd = new NodeRemoved{}; // NOLINT: protobuf owns, not us
+  auto node_removed_cmd = new NodeRemoved{};  // NOLINT: protobuf owns, not us
   node_removed_cmd->set_id(node_id);
   toclient_cmd.set_allocated_node_removed(node_removed_cmd);
 
