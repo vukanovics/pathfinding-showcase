@@ -40,6 +40,9 @@ class Session : public std::enable_shared_from_this<Session> {
   void ProcessAddNode(const float x, const float y) noexcept;
   void ProcessRemoveNode(const uint32_t id) noexcept;
 
+  void ProcessAddConnection(const uint32_t id1, const uint32_t id2);
+  void ProcessRemoveConnection(const uint32_t id1, const uint32_t id2);
+
   class PathfinderNode : public Pathfinding::Pathfinder::Node {
    public:
     PathfinderNode(float x, float y) : m_x(x), m_y(y) {}

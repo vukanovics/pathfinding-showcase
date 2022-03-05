@@ -70,10 +70,12 @@ void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
       ProcessRemoveNode(toserver_cmd.remove_node().id());
       break;
     case ToServerCommand::CommandCase::kAddConnection:
-      fmt::print("Add connection received!\n");
+      ProcessAddConnection(toserver_cmd.add_connection().id1(),
+                           toserver_cmd.add_connection().id2());
       break;
     case ToServerCommand::CommandCase::kRemoveConnection:
-      fmt::print("Remove connection received!\n");
+      ProcessRemoveConnection(toserver_cmd.remove_connection().id1(),
+                              toserver_cmd.remove_connection().id2());
       break;
     case ToServerCommand::CommandCase::kFindPath:
       fmt::print("Find path received!\n");
@@ -158,4 +160,61 @@ void Session::ProcessRemoveNode(const uint32_t id) noexcept {
 
   m_out_buffers.push_back(toclient_cmd.SerializeAsString());
 }
+
+void Session::ProcessAddConnection(const uint32_t id1, const uint32_t id2) {
+  const auto node_1_iter = m_pathfinder_nodes.find(id1);
+  if (node_1_iter == std::end(m_pathfinder_nodes)) {
+    fmt::print("Session::ProcessAddConnection: received an invalid id\n");
+    return;
+  }
+
+  const auto node_2_iter = m_pathfinder_nodes.find(id2);
+  if (node_2_iter == std::end(m_pathfinder_nodes)) {
+    fmt::print("Session::ProcessAddConnection: received an invalid id\n");
+    return;
+  }
+
+  auto [node_1_id, node_1] = *node_1_iter;
+  auto [node_2_id, node_2] = *node_2_iter;
+
+  node_1->AddConnection(node_2);
+
+  auto toclient_cmd = ToClientCommand{};
+  auto connection_added_cmd =
+      new ConnectionAdded{};  // NOLINT: protobuf owns, not us
+  connection_added_cmd->set_id1(node_1_id);
+  connection_added_cmd->set_id2(node_2_id);
+  toclient_cmd.set_allocated_connection_added(connection_added_cmd);
+
+  m_out_buffers.push_back(toclient_cmd.SerializeAsString());
+}
+
+void Session::ProcessRemoveConnection(const uint32_t id1, const uint32_t id2) {
+  const auto node_1_iter = m_pathfinder_nodes.find(id1);
+  if (node_1_iter == std::end(m_pathfinder_nodes)) {
+    fmt::print("Session::ProcessAddConnection: received an invalid id\n");
+    return;
+  }
+
+  const auto node_2_iter = m_pathfinder_nodes.find(id2);
+  if (node_2_iter == std::end(m_pathfinder_nodes)) {
+    fmt::print("Session::ProcessAddConnection: received an invalid id\n");
+    return;
+  }
+
+  auto [node_1_id, node_1] = *node_1_iter;
+  auto [node_2_id, node_2] = *node_2_iter;
+
+  node_1->RemoveConnection(node_2);
+
+  auto toclient_cmd = ToClientCommand{};
+  auto connection_removed_cmd =
+      new ConnectionRemoved{};  // NOLINT: protobuf owns, not us
+  connection_removed_cmd->set_id1(node_1_id);
+  connection_removed_cmd->set_id2(node_2_id);
+  toclient_cmd.set_allocated_connection_removed(connection_removed_cmd);
+
+  m_out_buffers.push_back(toclient_cmd.SerializeAsString());
+}
+
 };  // namespace Pathfinding

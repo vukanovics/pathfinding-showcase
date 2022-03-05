@@ -1,5 +1,6 @@
 let pathfinding_pb = require('./pathfinding_pb.js');
 let pathfinding_node_pb = require('./pathfinding_node_pb.js');
+let pathfinding_connection_pb = require('./pathfinding_connection_pb.js');
 
 const UPDATE_FPS = 30;
 
@@ -33,6 +34,8 @@ const ToolSetGoal = 6;
 
 let currentTool = ToolNone;
 
+let selectedNode = -1;
+
 class Node {
     constructor(id, x, y) {
         this.id = id;
@@ -41,7 +44,15 @@ class Node {
     }
 }
 
+class Connection {
+    constructor(from_id, to_id) {
+        this.from_id = from_id;
+        this.to_id = to_id;
+    }    
+}
+
 let nodes = [];
+let connections = [];
 
 let hovered_node_id = -1;
 
@@ -70,6 +81,19 @@ ws.onmessage = function(msg) {
         case pathfinding_pb.ToClientCommand.CommandCase.NODE_REMOVED:
             nodes = nodes.filter((node) => {
                 return node.id != command.getNodeRemoved().getId();
+            });
+            break;
+        case pathfinding_pb.ToClientCommand.CommandCase.CONNECTION_ADDED:
+            connections.push(
+                new Connection(
+                    command.getConnectionAdded().getId1(),
+                    command.getConnectionAdded().getId2())
+            );
+            break;
+        case pathfinding_pb.ToClientCommand.CommandCase.CONNECTION_REMOVED:
+            connections = connections.filter((connection) => {
+                return !(connection.from_id == command.getConnectionRemoved().getId1() &&
+                         connection.to_id == command.getConnectionRemoved().getId2());
             });
             break;
     }
@@ -110,6 +134,52 @@ function sendRemoveNode(id) {
     remove_node.setId(id);
 
     command.setRemoveNode(remove_node);
+
+    let data = command.serializeBinary();
+
+    ws.send(data);
+}
+
+function sendAddConnection(id1, id2) {
+    if (id1 == -1 || id2 == -1) {
+        return;
+    }
+
+    if (ws.readyState != ws.OPEN) {
+        console.log("tried to send a message through socket while it wasn't open");
+        return;
+    }
+
+    let command = new pathfinding_pb.ToServerCommand();
+
+    let add_connection = new pathfinding_connection_pb.AddConnection();
+    add_connection.setId1(id1);
+    add_connection.setId2(id2);
+
+    command.setAddConnection(add_connection);
+
+    let data = command.serializeBinary();
+
+    ws.send(data);
+}
+
+function sendRemoveConnection(id1, id2) {
+    if (id1 == -1 || id2 == -1) {
+        return;
+    }
+
+    if (ws.readyState != ws.OPEN) {
+        console.log("tried to send a message through socket while it wasn't open");
+        return;
+    }
+
+    let command = new pathfinding_pb.ToServerCommand();
+
+    let remove_connection = new pathfinding_connection_pb.RemoveConnection();
+    remove_connection.setId1(id1);
+    remove_connection.setId2(id2);
+
+    command.setRemoveConnection(remove_connection);
 
     let data = command.serializeBinary();
 
@@ -210,6 +280,28 @@ document.getElementById("mainCanvas").onclick = function(event) {
         case ToolRemoveNode:
             sendRemoveNode(hovered_node_id);
             break;
+        case ToolAddConnection:
+            if (hovered_node_id == -1) {
+                break;
+            }
+            if (selectedNode == -1) {
+                selectedNode = hovered_node_id;
+            } else {
+                sendAddConnection(selectedNode, hovered_node_id);
+                selectedNode = -1;
+            }
+            break;
+        case ToolRemoveConnection:
+            if (hovered_node_id == -1) {
+                break;
+            }
+            if (selectedNode == -1) {
+                selectedNode = hovered_node_id;
+            } else {
+                sendRemoveConnection(selectedNode, hovered_node_id);
+                selectedNode = -1;
+            }
+            break;
     }
 }
 
@@ -228,6 +320,14 @@ document.getElementById("addNodeButton").onclick = function() {
 
 document.getElementById("removeNodeButton").onclick = function() {
     currentTool = ToolRemoveNode;
+}
+
+document.getElementById("addConnectionButton").onclick = function() {
+    currentTool = ToolAddConnection;
+}
+
+document.getElementById("removeConnectionButton").onclick = function() {
+    currentTool = ToolRemoveConnection;
 }
 
 updateCanvas();
