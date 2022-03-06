@@ -180,8 +180,8 @@ void Session::ProcessAddConnection(const uint32_t id1, const uint32_t id2) {
   node_1->AddConnection(node_2);
 
   auto toclient_cmd = ToClientCommand{};
-  auto connection_added_cmd =
-      new ConnectionAdded{};  // NOLINT: protobuf owns, not us
+  auto connection_added_cmd =  // NOLINT: protobuf owns, not us
+      new ConnectionAdded{};   //
   connection_added_cmd->set_id1(node_1_id);
   connection_added_cmd->set_id2(node_2_id);
   toclient_cmd.set_allocated_connection_added(connection_added_cmd);

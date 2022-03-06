@@ -23,6 +23,9 @@ const NODE_HOVERED_FILL_COLOR = '#b050fa';
 const NODE_NUMBER_FONT = "24px Arial";
 const NODE_NUMBER_COLOR = "#ddd"
 
+const CONNECTION_WIDTH_PX = 20;
+const CONNECTION_COLOR = "#ff00ff";
+
 // enums in javascript?
 const ToolNone = 0;
 const ToolAddNode = 1;
@@ -186,6 +189,18 @@ function sendRemoveConnection(id1, id2) {
     ws.send(data);
 }
 
+function getNodeFromId(id) {
+    let found = nodes.filter((node) => {
+        return node.id == id;
+    });
+
+    if (found.length == 1) {
+        return found[0];
+    }
+
+    return -1;
+}
+
 function clearCanvas() {
     let canvas = document.getElementById("mainCanvas");
     let canvasContext = canvas.getContext("2d");
@@ -217,8 +232,9 @@ function drawNodes() {
     let canvasContext = canvas.getContext("2d");
 
     canvasContext.lineWidth = NODE_BORDER_WIDTH_PX;
+    canvasContext.strokeStyle = "#000";
 
-    nodes.forEach((node, _) => {
+    nodes.forEach((node) => {
         canvasContext.beginPath();
 
         canvasContext.arc(node.x, node.y, NODE_SIZE_PX, 0, 2 * Math.PI);
@@ -241,9 +257,35 @@ function drawNodes() {
     });
 }
 
+function drawConnections() {
+    let canvas = document.getElementById("mainCanvas");
+    let canvasContext = canvas.getContext("2d");
+
+    canvasContext.lineWidth = CONNECTION_WIDTH_PX;
+    canvasContext.strokeStyle = CONNECTION_COLOR;
+
+    connections.forEach((connection) => {
+        let node_1 = getNodeFromId(connection.from_id);
+        let node_2 = getNodeFromId(connection.to_id);
+
+        if (node_1 == -1 || node_2 == -1) {
+            console.log("drawConnections: connection has invalid node id");
+            return;
+        }
+
+        canvasContext.beginPath();
+
+        canvasContext.moveTo(node_1.x, node_1.y);
+        canvasContext.lineTo(node_2.x, node_2.y);
+        canvasContext.stroke();
+    });
+
+}
+
 function updateCanvas() {
     clearCanvas();
     drawGrid();
+    drawConnections();
     drawNodes();
 
     setTimeout(() => {
@@ -254,7 +296,7 @@ function updateCanvas() {
 function processMouseMove(x, y) {
     hovered_node_id = -1;
 
-    nodes.forEach((node, _) => {
+    nodes.forEach((node) => {
         var delta_x = node.x - x;
         var delta_y = node.y - y;
         var distance_to_cursor = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
