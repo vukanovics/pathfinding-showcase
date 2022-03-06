@@ -2,7 +2,7 @@ let pathfinding_pb = require('./pathfinding_pb.js');
 let pathfinding_node_pb = require('./pathfinding_node_pb.js');
 let pathfinding_connection_pb = require('./pathfinding_connection_pb.js');
 
-const UPDATE_FPS = 30;
+const UPDATE_FPS = 60;
 
 const GRID_SPACING_X_PX = 32;
 const GRID_SPACING_Y_PX = 32;
@@ -371,8 +371,14 @@ function processMouseMove(x, y) {
     });
 }
 
+function updateMainCanvasSize() {
+    let canvas = document.getElementById("mainCanvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    updateCanvas();
+}
+
 document.getElementById("mainCanvas").onmousedown = function(event) {
-    console.log("we are here, event: ", event);
     switch (event.button) {
         case 1: // middle mouse button
             dragging_camera = true;
@@ -453,4 +459,8 @@ document.getElementById("removeConnectionButton").onclick = function() {
     currentTool = ToolRemoveConnection;
 }
 
-updateCanvas();
+window.addEventListener("resize", function() {
+    updateMainCanvasSize();
+});
+
+updateMainCanvasSize();

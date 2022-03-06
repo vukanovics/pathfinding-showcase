@@ -4,8 +4,23 @@
     <title>Pathfinding showcase</title>
 </head>
 <body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            height: 100%;
+        }
+        #mainCanvas {
+            position: absolute;
+            /* height: 100%; */
+            width: 100%;
+            z-index: -1;
+        }
+    </style>
     <script src="bundle.js" defer></script>
-    <canvas id="mainCanvas" width=512 height=512>
+    <canvas id="mainCanvas">
 
     </canvas>
     <div id="controls">
