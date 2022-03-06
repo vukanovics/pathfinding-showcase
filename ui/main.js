@@ -4,13 +4,8 @@ let pathfinding_connection_pb = require('./pathfinding_connection_pb.js');
 
 const UPDATE_FPS = 30;
 
-const CANVAS_WIDTH = 512;
-const CANVAS_HEIGHT = 512;
-
-const GRID_LINES = 10;
-
-const GRID_SPACING_X = CANVAS_WIDTH / GRID_LINES;
-const GRID_SPACING_Y = CANVAS_HEIGHT / GRID_LINES;
+const GRID_SPACING_X_PX = 32;
+const GRID_SPACING_Y_PX = 32;
 
 const GRID_LINE_WIDTH_PX = 1;
 
@@ -65,6 +60,17 @@ let hovered_node_id = -1;
 let ws = new WebSocket("ws://127.0.0.1:8888");
 
 ws.binaryType = "arraybuffer";
+
+let camera_position_x = 0;
+let camera_position_y = 0;
+
+let previous_mouse_x = 0;
+let previous_mouse_y = 0;
+
+let mouse_world_x = 0;
+let mouse_world_y = 0;
+
+let dragging_camera = false;
 
 ws.onopen = function() {
     console.log("connected!");
@@ -211,28 +217,41 @@ function getNodeFromId(id) {
 
 function clearCanvas() {
     let canvas = document.getElementById("mainCanvas");
-    let canvasContext = canvas.getContext("2d");
+    let canvas_context = canvas.getContext("2d");
 
-    canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+    canvas_context.clearRect(0, 0, canvas.width, canvas.height);
+
+    //canvasContext.fillStyle = "white";
+    //canvasContext.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function drawGrid() {
     let canvas = document.getElementById("mainCanvas");
-    let canvasContext = canvas.getContext("2d");
+    let canvas_context = canvas.getContext("2d");
 
-    canvasContext.lineWidth = GRID_LINE_WIDTH_PX;
-    canvasContext.strokeStyle = "black";
+    canvas_context.lineWidth = GRID_LINE_WIDTH_PX;
+    canvas_context.strokeStyle = "black";
 
-    // we add 1 for the border line
-    for (let x = 0; x < GRID_LINES + 1; x++) {
-        canvasContext.moveTo(x * GRID_SPACING_X, 0);
-        canvasContext.lineTo(x * GRID_SPACING_X, CANVAS_HEIGHT);
-        canvasContext.stroke();
+    let canvas_width = canvas_context.canvas.width;
+    let canvas_height = canvas_context.canvas.height;
+
+    let grid_lines_x = canvas_width / GRID_SPACING_X_PX;
+    let grid_lines_y = canvas_height / GRID_SPACING_X_PX;
+
+    let grid_offset_x = camera_position_x % GRID_SPACING_X_PX;
+    let grid_offset_y = camera_position_y % GRID_SPACING_Y_PX;
+
+    canvas_context.beginPath();
+
+    for (let x = 0; x < grid_lines_x + 1; x++) {
+        canvas_context.moveTo(x * GRID_SPACING_X_PX + grid_offset_x, 0);
+        canvas_context.lineTo(x * GRID_SPACING_X_PX + grid_offset_x, canvas_height);
+        canvas_context.stroke();
     }
-    for (let y = 0; y < GRID_LINES + 1; y++) {
-        canvasContext.moveTo(0, y * GRID_SPACING_Y);
-        canvasContext.lineTo(CANVAS_WIDTH, y * GRID_SPACING_Y);
-        canvasContext.stroke();
+    for (let y = 0; y < grid_lines_y + 1; y++) {
+        canvas_context.moveTo(0, y * GRID_SPACING_Y_PX + grid_offset_y);
+        canvas_context.lineTo(canvas_width, y * GRID_SPACING_Y_PX + grid_offset_y);
+        canvas_context.stroke();
     }
 }
 
@@ -244,9 +263,12 @@ function drawNodes() {
     canvasContext.strokeStyle = "#000";
 
     nodes.forEach((node) => {
+        let world_x = node.x + camera_position_x;
+        let world_y = node.y + camera_position_y;
+
         canvasContext.beginPath();
 
-        canvasContext.arc(node.x, node.y, NODE_SIZE_PX, 0, 2 * Math.PI);
+        canvasContext.arc(world_x, world_y, NODE_SIZE_PX, 0, 2 * Math.PI);
         canvasContext.fillStyle = NODE_FILL_COLOR;
 
         if (node.id == hovered_node_id) {
@@ -262,7 +284,7 @@ function drawNodes() {
         canvasContext.textBaseline = "middle";
         canvasContext.fillStyle = NODE_NUMBER_COLOR;
 
-        canvasContext.fillText(node.id.toString(), node.x, node.y);
+        canvasContext.fillText(node.id.toString(), world_x, world_y);
     });
 }
 
@@ -282,23 +304,29 @@ function drawConnections() {
             return;
         }
 
+        let node_1_x = node_1.x + camera_position_x;
+        let node_1_y = node_1.y + camera_position_y;
+
+        let node_2_x = node_2.x + camera_position_x;
+        let node_2_y = node_2.y + camera_position_y;
+
         canvasContext.beginPath();
 
-        canvasContext.moveTo(node_1.x, node_1.y);
-        canvasContext.lineTo(node_2.x, node_2.y);
+        canvasContext.moveTo(node_1_x, node_1_y);
+        canvasContext.lineTo(node_2_x, node_2_y);
         canvasContext.stroke();
 
-        let angle = Math.atan2(node_2.y - node_1.y, node_2.x - node_1.x);
+        let angle = Math.atan2(node_2_y - node_1_y, node_2_x - node_1_x);
 
-        canvasContext.moveTo(node_2.x, node_2.y);
-        canvasContext.lineTo(node_2.x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle - CONNECTION_ARROW_ANGLE_RAD),
-                             node_2.y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle - CONNECTION_ARROW_ANGLE_RAD));
+        canvasContext.moveTo(node_2_x, node_2_y);
+        canvasContext.lineTo(node_2_x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle - CONNECTION_ARROW_ANGLE_RAD),
+                             node_2_y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle - CONNECTION_ARROW_ANGLE_RAD));
 
         canvasContext.stroke();
 
-        canvasContext.moveTo(node_2.x, node_2.y);
-        canvasContext.lineTo(node_2.x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle + CONNECTION_ARROW_ANGLE_RAD),
-                             node_2.y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle + CONNECTION_ARROW_ANGLE_RAD));
+        canvasContext.moveTo(node_2_x, node_2_y);
+        canvasContext.lineTo(node_2_x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle + CONNECTION_ARROW_ANGLE_RAD),
+                             node_2_y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle + CONNECTION_ARROW_ANGLE_RAD));
         canvasContext.stroke();
     });
 
@@ -316,11 +344,25 @@ function updateCanvas() {
 }
 
 function processMouseMove(x, y) {
+    let relative_move_x = previous_mouse_x - x;
+    let relative_move_y = previous_mouse_y - y;
+
+    previous_mouse_x = x;
+    previous_mouse_y = y;
+
+    if (dragging_camera) {
+        camera_position_x -= relative_move_x;
+        camera_position_y -= relative_move_y;
+    }
+
+    mouse_world_x = x - camera_position_x;
+    mouse_world_y = y - camera_position_y;
+
     hovered_node_id = -1;
 
     nodes.forEach((node) => {
-        var delta_x = node.x - x;
-        var delta_y = node.y - y;
+        var delta_x = node.x - mouse_world_x;
+        var delta_y = node.y - mouse_world_y;
         var distance_to_cursor = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
 
         if (distance_to_cursor < NODE_SIZE_PX) {
@@ -329,11 +371,28 @@ function processMouseMove(x, y) {
     });
 }
 
+document.getElementById("mainCanvas").onmousedown = function(event) {
+    console.log("we are here, event: ", event);
+    switch (event.button) {
+        case 1: // middle mouse button
+            dragging_camera = true;
+            break;
+    }
+}
+
+document.getElementById("mainCanvas").onmouseup = function(event) {
+    switch (event.button) {
+        case 1: // middle mouse button
+            dragging_camera = false;
+            break;
+    }
+}
+
 document.getElementById("mainCanvas").onclick = function(event) {
     const canvas = document.getElementById("mainCanvas");
 
-    const x = event.clientX - canvas.getBoundingClientRect().left;
-    const y = event.clientY - canvas.getBoundingClientRect().top;
+    const x = mouse_world_x;
+    const y = mouse_world_y;
 
     switch (currentTool) {
         case ToolNone:
