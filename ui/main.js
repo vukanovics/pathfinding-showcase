@@ -23,8 +23,11 @@ const NODE_HOVERED_FILL_COLOR = '#b050fa';
 const NODE_NUMBER_FONT = "24px Arial";
 const NODE_NUMBER_COLOR = "#ddd"
 
-const CONNECTION_WIDTH_PX = 20;
-const CONNECTION_COLOR = "#ff00ff";
+const CONNECTION_WIDTH_PX = 3;
+const CONNECTION_COLOR = "black";
+
+const CONNECTION_ARROW_LENGTH_PX = 32;
+const CONNECTION_ARROW_ANGLE_RAD = Math.PI/6;
 
 // enums in javascript?
 const ToolNone = 0;
@@ -84,6 +87,11 @@ ws.onmessage = function(msg) {
         case pathfinding_pb.ToClientCommand.CommandCase.NODE_REMOVED:
             nodes = nodes.filter((node) => {
                 return node.id != command.getNodeRemoved().getId();
+            });
+            // remove connections with one side being the removed node
+            connections = connections.filter((connection) => {
+                return !(connection.from_id == command.getNodeRemoved().getId() || 
+                         connection.to_id == command.getNodeRemoved().getId());
             });
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.CONNECTION_ADDED:
@@ -213,6 +221,7 @@ function drawGrid() {
     let canvasContext = canvas.getContext("2d");
 
     canvasContext.lineWidth = GRID_LINE_WIDTH_PX;
+    canvasContext.strokeStyle = "black";
 
     // we add 1 for the border line
     for (let x = 0; x < GRID_LINES + 1; x++) {
@@ -278,6 +287,19 @@ function drawConnections() {
         canvasContext.moveTo(node_1.x, node_1.y);
         canvasContext.lineTo(node_2.x, node_2.y);
         canvasContext.stroke();
+
+        let angle = Math.atan2(node_2.y - node_1.y, node_2.x - node_1.x);
+
+        canvasContext.moveTo(node_2.x, node_2.y);
+        canvasContext.lineTo(node_2.x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle - CONNECTION_ARROW_ANGLE_RAD),
+                             node_2.y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle - CONNECTION_ARROW_ANGLE_RAD));
+
+        canvasContext.stroke();
+
+        canvasContext.moveTo(node_2.x, node_2.y);
+        canvasContext.lineTo(node_2.x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle + CONNECTION_ARROW_ANGLE_RAD),
+                             node_2.y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle + CONNECTION_ARROW_ANGLE_RAD));
+        canvasContext.stroke();
     });
 
 }
@@ -285,8 +307,8 @@ function drawConnections() {
 function updateCanvas() {
     clearCanvas();
     drawGrid();
-    drawConnections();
     drawNodes();
+    drawConnections();
 
     setTimeout(() => {
         updateCanvas();
