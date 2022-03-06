@@ -2,8 +2,6 @@ let pathfinding_pb = require('./pathfinding_pb.js');
 let pathfinding_node_pb = require('./pathfinding_node_pb.js');
 let pathfinding_connection_pb = require('./pathfinding_connection_pb.js');
 
-const UPDATE_FPS = 60;
-
 const GRID_SPACING_X_PX = 32;
 const GRID_SPACING_Y_PX = 32;
 
@@ -338,9 +336,7 @@ function updateCanvas() {
     drawNodes();
     drawConnections();
 
-    setTimeout(() => {
-        updateCanvas();
-    }, 1000 / UPDATE_FPS);
+    requestAnimationFrame(updateCanvas);
 }
 
 function processMouseMove(x, y) {
@@ -375,7 +371,7 @@ function updateMainCanvasSize() {
     let canvas = document.getElementById("mainCanvas");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    updateCanvas();
+    requestAnimationFrame(updateCanvas);
 }
 
 document.getElementById("mainCanvas").onmousedown = function(event) {
