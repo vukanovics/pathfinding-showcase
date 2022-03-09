@@ -316,23 +316,29 @@ function drawConnections() {
         let node_2_x = node_2.x + camera_position_x;
         let node_2_y = node_2.y + camera_position_y;
 
-        canvasContext.beginPath();
-
-        canvasContext.moveTo(node_1_x, node_1_y);
-        canvasContext.lineTo(node_2_x, node_2_y);
-        canvasContext.stroke();
-
         let angle = Math.atan2(node_2_y - node_1_y, node_2_x - node_1_x);
 
-        canvasContext.moveTo(node_2_x, node_2_y);
-        canvasContext.lineTo(node_2_x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle - CONNECTION_ARROW_ANGLE_RAD),
-                             node_2_y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle - CONNECTION_ARROW_ANGLE_RAD));
+        let arrow_start_x = node_1_x + NODE_SIZE_PX * Math.cos(angle);
+        let arrow_start_y = node_1_y + NODE_SIZE_PX * Math.sin(angle);
+
+        let arrow_end_x = node_2_x - NODE_SIZE_PX * Math.cos(angle);
+        let arrow_end_y = node_2_y - NODE_SIZE_PX * Math.sin(angle);
+
+        canvasContext.beginPath();
+
+        canvasContext.moveTo(arrow_start_x, arrow_start_y);
+        canvasContext.lineTo(arrow_end_x, arrow_end_y);
+        canvasContext.stroke();
+
+        canvasContext.moveTo(arrow_end_x, arrow_end_y);
+        canvasContext.lineTo(arrow_end_x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle - CONNECTION_ARROW_ANGLE_RAD),
+                             arrow_end_y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle - CONNECTION_ARROW_ANGLE_RAD));
 
         canvasContext.stroke();
 
-        canvasContext.moveTo(node_2_x, node_2_y);
-        canvasContext.lineTo(node_2_x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle + CONNECTION_ARROW_ANGLE_RAD),
-                             node_2_y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle + CONNECTION_ARROW_ANGLE_RAD));
+        canvasContext.moveTo(arrow_end_x, arrow_end_y);
+        canvasContext.lineTo(arrow_end_x - CONNECTION_ARROW_LENGTH_PX * Math.cos(angle + CONNECTION_ARROW_ANGLE_RAD),
+                             arrow_end_y - CONNECTION_ARROW_LENGTH_PX * Math.sin(angle + CONNECTION_ARROW_ANGLE_RAD));
         canvasContext.stroke();
     });
 
