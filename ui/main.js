@@ -12,6 +12,7 @@ const NODE_BORDER_WIDTH_PX = 5;
 const NODE_SIZE_PX = 32;
 const NODE_FILL_COLOR = '#8b50fa';
 const NODE_HOVERED_FILL_COLOR = '#b050fa';
+const NODE_SELECTED_FILL_COLOR = '#ef50fa';
 
 const NODE_NUMBER_FONT = "24px Arial";
 const NODE_NUMBER_COLOR = "#ddd"
@@ -33,7 +34,7 @@ const ToolSetGoal = 6;
 
 let currentTool = ToolNone;
 
-let selectedNode = -1;
+let selected_node_id = -1;
 
 class Node {
     constructor(id, x, y) {
@@ -273,7 +274,10 @@ function drawNodes() {
         canvasContext.arc(world_x, world_y, NODE_SIZE_PX, 0, 2 * Math.PI);
         canvasContext.fillStyle = NODE_FILL_COLOR;
 
-        if (node.id == hovered_node_id) {
+        if (node.id == selected_node_id) {
+            canvasContext.fillStyle = NODE_SELECTED_FILL_COLOR;
+        }
+        else if (node.id == hovered_node_id) {
             canvasContext.fillStyle = NODE_HOVERED_FILL_COLOR;
         }
 
@@ -418,23 +422,25 @@ document.getElementById("mainCanvas").onclick = function(event) {
             if (hovered_node_id == -1) {
                 break;
             }
-            if (selectedNode == -1) {
-                selectedNode = hovered_node_id;
+            if (selected_node_id == -1) {
+                selected_node_id = hovered_node_id;
             } else {
-                sendAddConnection(selectedNode, hovered_node_id);
-                selectedNode = -1;
+                sendAddConnection(selected_node_id, hovered_node_id);
+                selected_node_id = -1;
             }
+            requestAnimationFrame(updateCanvas);
             break;
         case ToolRemoveConnection:
             if (hovered_node_id == -1) {
                 break;
             }
-            if (selectedNode == -1) {
-                selectedNode = hovered_node_id;
+            if (selected_node_id == -1) {
+                selected_node_id = hovered_node_id;
             } else {
-                sendRemoveConnection(selectedNode, hovered_node_id);
-                selectedNode = -1;
+                sendRemoveConnection(selected_node_id, hovered_node_id);
+                selected_node_id = -1;
             }
+            requestAnimationFrame(updateCanvas);
             break;
     }
 }
