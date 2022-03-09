@@ -87,6 +87,7 @@ ws.onmessage = function(msg) {
                     command.getNodeAdded().getY()
                 )
             );
+            requestAnimationFrame(updateCanvas);
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.NODE_REMOVED:
             nodes = nodes.filter((node) => {
@@ -97,6 +98,7 @@ ws.onmessage = function(msg) {
                 return !(connection.from_id == command.getNodeRemoved().getId() || 
                          connection.to_id == command.getNodeRemoved().getId());
             });
+            requestAnimationFrame(updateCanvas);
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.CONNECTION_ADDED:
             connections.push(
@@ -104,12 +106,14 @@ ws.onmessage = function(msg) {
                     command.getConnectionAdded().getId1(),
                     command.getConnectionAdded().getId2())
             );
+            requestAnimationFrame(updateCanvas);
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.CONNECTION_REMOVED:
             connections = connections.filter((connection) => {
                 return !(connection.from_id == command.getConnectionRemoved().getId1() &&
                          connection.to_id == command.getConnectionRemoved().getId2());
             });
+            requestAnimationFrame(updateCanvas);
             break;
     }
 }
@@ -335,8 +339,6 @@ function updateCanvas() {
     drawGrid();
     drawNodes();
     drawConnections();
-
-    requestAnimationFrame(updateCanvas);
 }
 
 function processMouseMove(x, y) {
@@ -349,11 +351,14 @@ function processMouseMove(x, y) {
     if (dragging_camera) {
         camera_position_x -= relative_move_x;
         camera_position_y -= relative_move_y;
+
+        requestAnimationFrame(updateCanvas);
     }
 
     mouse_world_x = x - camera_position_x;
     mouse_world_y = y - camera_position_y;
 
+    let previous_hovered_node_id = hovered_node_id;
     hovered_node_id = -1;
 
     nodes.forEach((node) => {
@@ -365,6 +370,10 @@ function processMouseMove(x, y) {
             hovered_node_id = node.id;
         }
     });
+
+    if (previous_hovered_node_id != hovered_node_id) {
+        requestAnimationFrame(updateCanvas);
+    }
 }
 
 function updateMainCanvasSize() {
