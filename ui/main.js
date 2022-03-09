@@ -32,7 +32,7 @@ const ToolRemoveConnection = 4;
 const ToolSetStart = 5;
 const ToolSetGoal = 6;
 
-let currentTool = ToolNone;
+let current_tool = ToolNone;
 
 let selected_node_id = -1;
 
@@ -409,7 +409,7 @@ document.getElementById("mainCanvas").onclick = function(event) {
     const x = mouse_world_x;
     const y = mouse_world_y;
 
-    switch (currentTool) {
+    switch (current_tool) {
         case ToolNone:
             break;
         case ToolAddNode:
@@ -455,19 +455,19 @@ document.getElementById("mainCanvas").onmousemove = function(event) {
 }
 
 document.getElementById("addNodeButton").onclick = function() {
-    currentTool = ToolAddNode;
+    current_tool = ToolAddNode;
 }
 
 document.getElementById("removeNodeButton").onclick = function() {
-    currentTool = ToolRemoveNode;
+    current_tool = ToolRemoveNode;
 }
 
 document.getElementById("addConnectionButton").onclick = function() {
-    currentTool = ToolAddConnection;
+    current_tool = ToolAddConnection;
 }
 
 document.getElementById("removeConnectionButton").onclick = function() {
-    currentTool = ToolRemoveConnection;
+    current_tool = ToolRemoveConnection;
 }
 
 window.addEventListener("resize", function() {
