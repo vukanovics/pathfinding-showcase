@@ -10,12 +10,13 @@ add_custom_command(
 add_custom_command(
     OUTPUT static/bundle.js
     COMMAND browserify ${CMAKE_CURRENT_SOURCE_DIR}/main.js > ${CMAKE_CURRENT_SOURCE_DIR}/static/bundle.js
+    DEPENDS
+        pathfinding-proto.js
 )
 
 add_custom_target(
     pathfinding-ui ALL
 
     DEPENDS
-     pathfinding-proto.js
-     static/bundle.js
+        static/bundle.js
 )
