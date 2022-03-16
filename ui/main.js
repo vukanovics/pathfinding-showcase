@@ -36,6 +36,9 @@ let current_tool = ToolNone;
 
 let selected_node_id = -1;
 
+let path_start_node_id = -1;
+let path_goal_node_id = -1;
+
 class Node {
     constructor(id, x, y) {
         this.id = id;
@@ -448,6 +451,18 @@ document.getElementById("mainCanvas").onclick = function(event) {
             }
             requestAnimationFrame(updateCanvas);
             break;
+        case ToolSetStart:
+            if (hovered_node_id == -1) {
+                break;
+            }
+            path_start_node_id = hovered_node_id;
+            break;
+        case ToolSetGoal:
+            if (hovered_node_id == -1) {
+                break;
+            }
+            path_goal_node_id = hovered_node_id;
+            break;
     }
 }
 
@@ -474,6 +489,14 @@ document.getElementById("addConnectionButton").onclick = function() {
 
 document.getElementById("removeConnectionButton").onclick = function() {
     current_tool = ToolRemoveConnection;
+}
+
+document.getElementById("setStartButton").onclick = function() {
+    current_tool = ToolSetStart;
+}
+
+document.getElementById("setGoalButton").onclick = function() {
+    current_tool = ToolSetGoal;
 }
 
 window.addEventListener("resize", function() {
