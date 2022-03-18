@@ -15,11 +15,17 @@ const NODE_FILL_COLOR = '#8b50fa';
 const NODE_HOVERED_FILL_COLOR = '#b050fa';
 const NODE_SELECTED_FILL_COLOR = '#ef50fa';
 
+const NODE_PATH_FILL_COLOR = '#4287f5';
+const NODE_PATH_HOVERED_FILL_COLOR = '#5c94ed';
+const NODE_PATH_SELECTED_FILL_COLOR = '#6c9deb';
+
 const NODE_NUMBER_FONT = "24px Arial";
 const NODE_NUMBER_COLOR = "#ddd"
 
 const CONNECTION_WIDTH_PX = 3;
-const CONNECTION_COLOR = "black";
+
+const CONNECTION_COLOR = "#15002b";
+const CONNECTION_PATH_COLOR = "#05c5f0";
 
 const CONNECTION_ARROW_LENGTH_PX = 32;
 const CONNECTION_ARROW_ANGLE_RAD = Math.PI/6;
@@ -45,6 +51,7 @@ class Node {
         this.id = id;
         this.x = x;
         this.y = y;
+        this.active = false;
     }
 }
 
@@ -52,6 +59,7 @@ class Connection {
     constructor(from_id, to_id) {
         this.from_id = from_id;
         this.to_id = to_id;
+        this.active = false;
     }    
 }
 
@@ -121,7 +129,31 @@ ws.onmessage = function(msg) {
             requestAnimationFrame(updateCanvas);
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.PATH_RESULT:
-            console.log("has_path=", command.getPathResult().getFound(), "nodes=", command.getPathResult().getNodesList());
+            const path_nodes = command.getPathResult().getNodesList();
+            let previous_in_path = -1;
+
+            connections.forEach((connection) => {
+                connection.active = false;
+            });
+
+            nodes.forEach((node) => {
+                const is_in_path = path_nodes.find((path_id) => { return path_id == node.id; });
+                if (is_in_path == undefined) {
+                    node.active = false;
+                    return;
+                }
+
+                node.active = true;
+
+                connections.forEach((connection) => {
+                    if (connection.from_id == previous_in_path && connection.to_id == node.id) {
+                        connection.active = true;
+                    }
+                });
+
+                previous_in_path = node.id;
+            });
+            requestAnimationFrame(updateCanvas);
             break;
     }
 }
@@ -303,13 +335,13 @@ function drawNodes() {
         canvasContext.beginPath();
 
         canvasContext.arc(world_x, world_y, NODE_SIZE_PX, 0, 2 * Math.PI);
-        canvasContext.fillStyle = NODE_FILL_COLOR;
+        canvasContext.fillStyle = node.active ? NODE_PATH_FILL_COLOR : NODE_FILL_COLOR;
 
         if (node.id == selected_node_id) {
-            canvasContext.fillStyle = NODE_SELECTED_FILL_COLOR;
+            canvasContext.fillStyle = node.active ? NODE_PATH_SELECTED_FILL_COLOR : NODE_SELECTED_FILL_COLOR;
         }
         else if (node.id == hovered_node_id) {
-            canvasContext.fillStyle = NODE_HOVERED_FILL_COLOR;
+            canvasContext.fillStyle = node.active ? NODE_PATH_HOVERED_FILL_COLOR : NODE_HOVERED_FILL_COLOR;
         }
 
         canvasContext.fill();
@@ -330,7 +362,6 @@ function drawConnections() {
     let canvasContext = canvas.getContext("2d");
 
     canvasContext.lineWidth = CONNECTION_WIDTH_PX;
-    canvasContext.strokeStyle = CONNECTION_COLOR;
 
     connections.forEach((connection) => {
         let node_1 = getNodeFromId(connection.from_id);
@@ -354,6 +385,13 @@ function drawConnections() {
 
         let arrow_end_x = node_2_x - NODE_SIZE_PX * Math.cos(angle);
         let arrow_end_y = node_2_y - NODE_SIZE_PX * Math.sin(angle);
+
+        if (connection.active) {
+            canvasContext.strokeStyle = CONNECTION_PATH_COLOR;
+        }
+        else {
+            canvasContext.strokeStyle = CONNECTION_COLOR;
+        }
 
         canvasContext.beginPath();
 
