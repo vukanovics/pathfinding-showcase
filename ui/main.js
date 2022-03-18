@@ -1,6 +1,7 @@
 let pathfinding_pb = require('./pathfinding_pb.js');
 let pathfinding_node_pb = require('./pathfinding_node_pb.js');
 let pathfinding_connection_pb = require('./pathfinding_connection_pb.js');
+let pathfinding_path_pb = require('./pathfinding_path_pb.js')
 
 const GRID_SPACING_X_PX = 32;
 const GRID_SPACING_Y_PX = 32;
@@ -119,6 +120,9 @@ ws.onmessage = function(msg) {
             });
             requestAnimationFrame(updateCanvas);
             break;
+        case pathfinding_pb.ToClientCommand.CommandCase.PATH_RESULT:
+            console.log("has_path=", command.getPathResult().getFound(), "nodes=", command.getPathResult().getNodesList());
+            break;
     }
 }
 
@@ -203,6 +207,30 @@ function sendRemoveConnection(id1, id2) {
     remove_connection.setId2(id2);
 
     command.setRemoveConnection(remove_connection);
+
+    let data = command.serializeBinary();
+
+    ws.send(data);
+}
+
+function sendFindPath(algorithm) {
+    if (path_start_node_id == -1 || path_goal_node_id == -1) {
+        return;
+    }
+
+    if (ws.readyState != ws.OPEN) {
+        console.log("tried to send a message through socket while it wasn't open");
+        return;
+    }
+
+    let command = new pathfinding_pb.ToServerCommand();
+
+    let find_path = new pathfinding_path_pb.FindPath();
+    find_path.setStart(path_start_node_id);
+    find_path.setGoal(path_goal_node_id);
+    find_path.setAlgorithm(algorithm);
+
+    command.setFindPath(find_path);
 
     let data = command.serializeBinary();
 
@@ -497,6 +525,10 @@ document.getElementById("setStartButton").onclick = function() {
 
 document.getElementById("setGoalButton").onclick = function() {
     current_tool = ToolSetGoal;
+}
+
+document.getElementById("findPath").onclick = function () {
+    sendFindPath(0);
 }
 
 window.addEventListener("resize", function() {

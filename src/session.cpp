@@ -78,6 +78,9 @@ void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
                               toserver_cmd.remove_connection().id2());
       break;
     case ToServerCommand::CommandCase::kFindPath:
+      ProcessFindPath(toserver_cmd.find_path().start(),
+                      toserver_cmd.find_path().goal(),
+                      toserver_cmd.find_path().algorithm());
       fmt::print("Find path received!\n");
       break;
   }
@@ -217,4 +220,52 @@ void Session::ProcessRemoveConnection(const uint32_t id1, const uint32_t id2) {
   m_out_buffers.push_back(toclient_cmd.SerializeAsString());
 }
 
+void Session::ProcessFindPath(const uint32_t start_id, const uint32_t goal_id,
+                              const Algorithm algorithm) {
+  const auto start_iter = m_pathfinder_nodes.find(start_id);
+  if (start_iter == std::end(m_pathfinder_nodes)) {
+    fmt::print("Session::ProcessFindPath: received an invalid id\n");
+    return;
+  }
+
+  const auto goal_iter = m_pathfinder_nodes.find(goal_id);
+  if (goal_iter == std::end(m_pathfinder_nodes)) {
+    fmt::print("Session::ProcessFindPath: received an invalid id\n");
+    return;
+  }
+
+  auto& start = (*start_iter).second;
+  auto& goal = (*goal_iter).second;
+
+  auto result = m_pathfinder.FindPath(
+      start, goal, static_cast<Pathfinding::Pathfinder::Backend>(algorithm));
+
+  auto toclient_cmd = ToClientCommand{};
+  auto path_result_cmd = new PathResult{};  // NOLINT: protobuf owns, not us
+  path_result_cmd->set_found(result.path.has_value());
+  if (result.path.has_value()) {
+    for (const auto& node : result.path.value().nodes) {
+      const auto node_id = [&node, this]() -> uint32_t {
+        auto found_iter =
+            std::find_if(std::cbegin(m_pathfinder_nodes),
+                         std::cend(m_pathfinder_nodes), [&node](const auto& n) {
+                           auto [n_id, n_ptr] = n;
+                           return n_ptr == node;
+                         });
+        if (found_iter != std::cend(m_pathfinder_nodes)) {
+          return (*found_iter).first;
+        }
+        fmt::print(
+            "Session::ProcessFindPath: m_pathfinder.FindPath returned invalid "
+            "node ptr\n");
+        return 0;
+      }();
+      path_result_cmd->add_nodes(node_id);
+    }
+  }
+
+  toclient_cmd.set_allocated_path_result(path_result_cmd);
+
+  m_out_buffers.push_back(toclient_cmd.SerializeAsString());
+}
 };  // namespace Pathfinding

@@ -2,6 +2,7 @@
 
 #include <fmt/format.h>
 #include <libpathfinding/src/pathfinder.h>
+#include <pathfinding_path.pb.h>
 
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -42,6 +43,9 @@ class Session : public std::enable_shared_from_this<Session> {
 
   void ProcessAddConnection(const uint32_t id1, const uint32_t id2);
   void ProcessRemoveConnection(const uint32_t id1, const uint32_t id2);
+
+  void ProcessFindPath(const uint32_t startId, const uint32_t goalId,
+                       const Algorithm algorithm);
 
   class PathfinderNode : public Pathfinding::Pathfinder::Node {
    public:
