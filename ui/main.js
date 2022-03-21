@@ -84,7 +84,11 @@ let mouse_world_y = 0;
 let dragging_camera = false;
 
 ws.onopen = function() {
-    console.log("connected!");
+    document.getElementById("error").hidden = true;
+}
+
+ws.onclose = function() {
+    document.getElementById("error").hidden = false;
 }
 
 ws.onmessage = function(msg) {
