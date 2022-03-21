@@ -573,7 +573,7 @@ document.getElementById("setGoalButton").onclick = function() {
 }
 
 document.getElementById("findPath").onclick = function () {
-    sendFindPath(0);
+    sendFindPath(document.getElementById("algorithm").selectedIndex);
 }
 
 window.addEventListener("resize", function() {

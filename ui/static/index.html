@@ -34,7 +34,7 @@
             border: 2px solid black;
         }
 
-        input {
+        input, select, option {
             padding: 5px;
         }
     </style>
@@ -50,6 +50,10 @@
         <input type="button" id="removeConnectionButton" value="Remove Connection"></input>
         <input type="button" id="setStartButton" value="Set Start"></input>
         <input type="button" id="setGoalButton" value="Set Goal"></input>
+
+        <select id="algorithm" name="algorithm">
+            <option>AStar</option>
+        </select>
 
         <input type="button" id="findPath" value="Find Path!"></input>
     </div>

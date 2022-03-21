@@ -81,7 +81,6 @@ void Session::OnRead(beast::error_code error, std::size_t bytes_transferred) {
       ProcessFindPath(toserver_cmd.find_path().start(),
                       toserver_cmd.find_path().goal(),
                       toserver_cmd.find_path().algorithm());
-      fmt::print("Find path received!\n");
       break;
   }
 
