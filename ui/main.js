@@ -134,28 +134,31 @@ ws.onmessage = function(msg) {
             break;
         case pathfinding_pb.ToClientCommand.CommandCase.PATH_RESULT:
             const path_nodes = command.getPathResult().getNodesList();
-            let previous_in_path = -1;
 
             connections.forEach((connection) => {
                 connection.active = false;
             });
 
             nodes.forEach((node) => {
-                const is_in_path = path_nodes.find((path_id) => { return path_id == node.id; });
-                if (is_in_path == undefined) {
+                const path_index = path_nodes.findIndex((path_id) => { return path_id == node.id; });
+                if (path_index == -1) {
                     node.active = false;
                     return;
                 }
 
                 node.active = true;
 
+                if (path_index == 0) {
+                    return;
+                }
+
+                const previous_in_path_id = path_nodes[path_index - 1];
+
                 connections.forEach((connection) => {
-                    if (connection.from_id == previous_in_path && connection.to_id == node.id) {
+                    if (connection.from_id == previous_in_path_id && connection.to_id == node.id) {
                         connection.active = true;
                     }
                 });
-
-                previous_in_path = node.id;
             });
             requestAnimationFrame(updateCanvas);
             break;
