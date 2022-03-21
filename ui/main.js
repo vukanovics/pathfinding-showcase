@@ -11,16 +11,16 @@ const GRID_LINE_WIDTH_PX = 1;
 const NODE_BORDER_WIDTH_PX = 5;
 
 const NODE_SIZE_PX = 32;
-const NODE_FILL_COLOR = '#8b50fa';
-const NODE_HOVERED_FILL_COLOR = '#b050fa';
-const NODE_SELECTED_FILL_COLOR = '#ef50fa';
+const NODE_FILL_COLOR = '#8c95e6';
+const NODE_HOVERED_FILL_COLOR = '#6d78de';
+const NODE_SELECTED_FILL_COLOR = '#4251db';
 
 const NODE_PATH_FILL_COLOR = '#4287f5';
 const NODE_PATH_HOVERED_FILL_COLOR = '#5c94ed';
 const NODE_PATH_SELECTED_FILL_COLOR = '#6c9deb';
 
-const NODE_NUMBER_FONT = "24px Arial";
-const NODE_NUMBER_COLOR = "#ddd"
+const NODE_NUMBER_FONT = "12px Arial";
+const NODE_NUMBER_COLOR = "#fff"
 
 const CONNECTION_WIDTH_PX = 3;
 
@@ -360,7 +360,16 @@ function drawNodes() {
         canvasContext.textBaseline = "middle";
         canvasContext.fillStyle = NODE_NUMBER_COLOR;
 
-        canvasContext.fillText(node.id.toString(), world_x, world_y);
+        let label = node.id.toString();
+
+        if (node.id == path_start_node_id) {
+            label += " - Start"
+        }
+        if (node.id == path_goal_node_id) {
+            label += " - Goal"
+        }
+
+        canvasContext.fillText(label, world_x, world_y);
     });
 }
 
