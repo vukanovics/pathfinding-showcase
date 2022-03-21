@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21.3)
 
-project(pathfinding-backend)
+project(pathfinding-showcase)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
